@@ -64,7 +64,7 @@ def select_h_rrss(
             C, _, _, _ = lstsq(thetaT_theta, (X @ theta).T)
             X_hat = (theta @ C).T
             residuals = X - X_hat
-            rrss = np.sqrt(np.sum(residuals ** 2) / (n * denom))
+            rrss = np.sqrt(np.sum(residuals**2) / (n * denom))
             if rrss < best_rrss:
                 best_rrss = rrss
                 best_h = h

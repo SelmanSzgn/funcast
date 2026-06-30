@@ -1,0 +1,116 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# Métadonnées
+[project]
+name = "funcast"
+version = "0.1.0"
+description = "Functional data forecasting with covariates (FunCast model)"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+
+authors = [
+    { name = "Selman Sezgin", email = "selman.szg@gmail.com" }
+]
+
+keywords = [
+    "functional data analysis",
+    "forecasting",
+    "time series",
+    "B-spline",
+    "statistics",
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "scikit-learn>=1.3",
+]
+
+# URLs du projet
+[project.urls]
+Homepage       = "https://github.com/SelmanSzgn/funcast"
+Repository     = "https://github.com/SelmanSzgn/funcast"
+Documentation  = "https://funcast.readthedocs.io"
+"Bug Tracker"  = "https://github.com/SelmanSzgn/funcast/issues"
+
+# Dépendances optionnelles
+[project.optional-dependencies]
+
+# Outils de développement : pip install funcast[dev]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.4",
+    "mypy>=1.0",
+]
+
+# Dépendances pour les exemples : pip install funcast[examples]
+examples = [
+    "matplotlib>=3.7",
+    "jupyter>=1.0",
+]
+
+# Configuration de hatchling (build backend)
+[tool.hatch.build.targets.wheel]
+packages = ["src/funcast"]
+
+# Configuration de ruff (linting + formatage)
+[tool.ruff]
+src            = ["src"]
+line-length    = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort (ordre des imports)
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (géré par le formateur)
+    "N803",  # argument name should be lowercase (noms mathématiques : X, Y, B)
+    "N806",  # variable in function should be lowercase (X_design, C_full, etc.)
+]
+
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["N802", "N803"]
+
+# Configuration de mypy (vérification des types)
+[tool.mypy]
+python_version    = "3.12"
+strict            = false
+warn_return_any   = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+# Configuration de pytest
+[tool.pytest.ini_options]
+testpaths    = ["tests"]
+addopts      = "-v --cov=funcast --cov-report=term-missing"
+
+# Configuration de coverage
+[tool.coverage.run]
+source  = ["src/funcast"]
+omit    = ["tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false

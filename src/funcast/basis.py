@@ -33,11 +33,9 @@ def bspline_basis(t: np.ndarray, n_basis: int, degree: int = 3) -> np.ndarray:
     else:
         inner_knots = np.array([])
 
-    knots = np.concatenate([
-        np.repeat(t_min, degree + 1),
-        inner_knots,
-        np.repeat(t_max, degree + 1)
-    ])
+    knots = np.concatenate(
+        [np.repeat(t_min, degree + 1), inner_knots, np.repeat(t_max, degree + 1)]
+    )
 
     B = np.zeros((len(t), n_basis))
     for j in range(n_basis):
