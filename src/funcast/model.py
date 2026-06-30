@@ -242,7 +242,7 @@ class FunCast(BaseEstimator):
 
         n_new = Y_past_new.shape[0]
         y_pred = X_new_design @ self.b_hat_
-        return np.asarray(y_pred).reshape(n_new, self.m2_) 
+        return np.asarray(y_pred).reshape(n_new, self.m2_)
 
 
     def score(
