@@ -124,7 +124,6 @@ class FunCast(BaseEstimator):
             J_list.append(J)
         return J_list
 
-
     def _build_design_matrix(
         self,
         C_list: list[np.ndarray],
@@ -231,10 +230,8 @@ class FunCast(BaseEstimator):
         C_new_list = []
         for X_new, theta, h in zip(all_new, self.theta_list_, self.h_values_):
             thetaT_theta = theta.T @ theta
-            C_new, _, _, _ = lstsq(
-                thetaT_theta, (X_new @ theta).T, cond=self.rcond
-            )
-            C_new_list.append(np.asarray(C_new).T)   # ← np.asarray() clarifie le type
+            C_new, _, _, _ = lstsq(thetaT_theta, (X_new @ theta).T, cond=self.rcond)
+            C_new_list.append(np.asarray(C_new).T)  # ← np.asarray() clarifie le type
 
         X_new_design = self._build_design_matrix(
             C_new_list, self.J_list_, self.t_future_, self.q_values_
@@ -243,7 +240,6 @@ class FunCast(BaseEstimator):
         n_new = Y_past_new.shape[0]
         y_pred = X_new_design @ self.b_hat_
         return np.asarray(y_pred).reshape(n_new, self.m2_)
-
 
     def score(
         self,
