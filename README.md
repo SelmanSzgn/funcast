@@ -1,3 +1,9 @@
+[![CI](https://github.com/ton-username/funcast/actions/workflows/ci.yml/badge.svg)](https://github.com/ton-username/funcast/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/funcast.svg)](https://pypi.org/project/funcast/)
+[![Python](https://img.shields.io/pypi/pyversions/funcast.svg)](https://pypi.org/project/funcast/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+
 Python implementation of the FunCast functional data forecasting model.
 
 ## Paper reference
