@@ -46,6 +46,10 @@ class FunCast(BaseEstimator):
         self.degree = degree
         self.rcond = rcond
 
+    # ------------------------------------------------------------------
+    # Méthodes internes
+    # ------------------------------------------------------------------
+
     def _compute_h(
         self,
         covariates_past: list[np.ndarray],
@@ -56,7 +60,8 @@ class FunCast(BaseEstimator):
         for ell, X in enumerate(covariates_past):
             if self.auto_h:
                 h = select_h_rrss(
-                    X, t_past,
+                    X,
+                    t_past,
                     basis_type=self.basis_type,
                     degree=self.degree,
                 )
@@ -101,10 +106,16 @@ class FunCast(BaseEstimator):
 
             Jθ,B,ℓ = ∫₀ᵀ θℓ(u)ᵀ Bℓ(u) du ∈ R^{hℓ × qℓ}
 
-        Approximée par la règle des trapèzes via np.trapezoid (numpy ≥ 2.0)
-        avec repli sur np.trapz.
+        Approximée par la règle des trapèzes.
+        Utilise np.trapezoid (numpy ≥ 2.0) ou np.trapz (numpy < 2.0).
         """
-        trapezoid = getattr(np, "trapezoid", np.trapz)
+        try:
+            # numpy >= 2.0
+            trapezoid = np.trapezoid  # type: ignore[attr-defined]
+        except AttributeError:
+            # numpy < 2.0
+            trapezoid = np.trapz  # type: ignore[attr-defined]
+
         J_list = []
         for theta, q_ell in zip(theta_list, q_values):
             B_ell = get_basis(t_past, q_ell, self.basis_type)
@@ -112,6 +123,7 @@ class FunCast(BaseEstimator):
             J = trapezoid(integrand, x=t_past, axis=0)
             J_list.append(J)
         return J_list
+
 
     def _build_design_matrix(
         self,
@@ -139,7 +151,7 @@ class FunCast(BaseEstimator):
                 c_end = c_start + h_ell
                 c_i_ell = C_full[:, c_start:c_end]
                 cJ = c_i_ell @ J
-                block = np.einsum('k,nq->nkq', psi_t, cJ).reshape(n, K * q_ell)
+                block = np.einsum("k,nq->nkq", psi_t, cJ).reshape(n, K * q_ell)
                 xi_parts.append(block)
 
             xi_j = np.concatenate(xi_parts, axis=1)
@@ -222,7 +234,7 @@ class FunCast(BaseEstimator):
             C_new, _, _, _ = lstsq(
                 thetaT_theta, (X_new @ theta).T, cond=self.rcond
             )
-            C_new_list.append(C_new.T)
+            C_new_list.append(np.asarray(C_new).T)   # ← np.asarray() clarifie le type
 
         X_new_design = self._build_design_matrix(
             C_new_list, self.J_list_, self.t_future_, self.q_values_
@@ -230,7 +242,8 @@ class FunCast(BaseEstimator):
 
         n_new = Y_past_new.shape[0]
         y_pred = X_new_design @ self.b_hat_
-        return y_pred.reshape(n_new, self.m2_)
+        return np.asarray(y_pred).reshape(n_new, self.m2_) 
+
 
     def score(
         self,
@@ -259,6 +272,4 @@ class FunCast(BaseEstimator):
             denom = np.where(denom == 0, 1e-8, denom)
             return float(100 * np.mean(np.abs(Y_future - Y_pred) / denom))
         else:
-            raise ValueError(
-                f"metric inconnu : '{metric}'. Choisir 'rmse' ou 'smape'."
-            )
+            raise ValueError(f"metric inconnu : '{metric}'. Choisir 'rmse' ou 'smape'.")
