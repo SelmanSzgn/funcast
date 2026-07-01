@@ -2,15 +2,12 @@
 FunCast model implementation.
 """
 
-from typing import Callable
-
 import numpy as np
 from scipy.linalg import lstsq
 from sklearn.base import BaseEstimator
 
 from funcast.basis import get_basis
 from funcast.selection import select_h_rrss
-
 
 if hasattr(np, "trapezoid"):
     _trapezoid = np.trapezoid  # type: ignore[attr-defined]
