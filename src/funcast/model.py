@@ -1,9 +1,8 @@
 """
-Modèle FunCast — Prévision fonctionnelle avec covariates.
-
-Référence : Sezgin et al. (2025), "FunCast: a forecasting model for
-functional data using covariates", Statistics and Computing.
+FunCast model implementation.
 """
+
+from typing import Callable
 
 import numpy as np
 from scipy.linalg import lstsq
@@ -13,19 +12,32 @@ from funcast.basis import get_basis
 from funcast.selection import select_h_rrss
 
 
+if hasattr(np, "trapezoid"):
+    _trapezoid = np.trapezoid  # type: ignore[attr-defined]
+else:
+    _trapezoid = np.trapz  # type: ignore[attr-defined]
+
+
 class FunCast(BaseEstimator):
     """
-    Modèle FunCast — Prévision fonctionnelle avec covariates.
+    FunCast model.
 
-    Paramètres
+    Parameters
     ----------
-    K          : int   — nb de fonctions de base ψ pour le futur de Y (Step 1)
-    s          : float — coefficient de lissage ∈ [0,1] ; qℓ = (1-s)*hℓ (Step 3)
-    basis_type : str   — type de base ('bspline' ou 'fourier')
-    auto_h     : bool  — si True, hℓ sélectionné automatiquement via RRSS (Step 2)
-    h_list     : list  — valeurs de hℓ imposées si auto_h=False (longueur = p+1)
-    degree     : int   — degré des B-splines (défaut : 3 = cubique)
-    rcond      : float — seuil pour la pseudo-inverse (None = auto)
+    K : int, optionnal
+        Number of basis functions for the future of Y. Default is 10.
+    s : float, optionnal
+        Smoothing coefficient. Default is 0.5.
+    basis_type : str
+        Type of function basis, "bspline" or "fourier". Default is "bspline".
+    auto_h : bool, optionnal
+        If True, h_l is optimized with RRSS. Default is True.
+    h_list : list, optionnal
+        Values of h_l if auto_h is False. Default is None.
+    degree : int, optionnal
+        B-splines degree. Default is 3.
+    rcond : float or None, optionnal
+        Pseudo-inverse threshold. Default is None.
     """
 
     def __init__(
@@ -46,16 +58,26 @@ class FunCast(BaseEstimator):
         self.degree = degree
         self.rcond = rcond
 
-    # ------------------------------------------------------------------
-    # Méthodes internes
-    # ------------------------------------------------------------------
-
     def _compute_h(
         self,
         covariates_past: list[np.ndarray],
         t_past: np.ndarray,
     ) -> list[int]:
-        """Calcule hℓ pour chaque covariate. Section 5, Step 2."""
+        """
+        Compute h_l for each covariate.
+
+        Parameters
+        ----------
+        covariates_past : list of array-like
+            Past of covariates.
+        t_past : array-like
+            Past timestamps.
+
+        Returns
+        -------
+        h_values : list
+            Values of h_l.
+        """
         h_values = []
         for ell, X in enumerate(covariates_past):
             if self.auto_h:
@@ -68,14 +90,26 @@ class FunCast(BaseEstimator):
             else:
                 if self.h_list is None or len(self.h_list) <= ell:
                     raise ValueError(
-                        "h_list doit être fourni et de longueur p+1 si auto_h=False."
+                        "h_list required and of length p+1 if auto_h=False."
                     )
                 h = max(self.h_list[ell], self.degree + 1)
             h_values.append(h)
         return h_values
 
     def _compute_q(self, h_values: list[int]) -> list[int]:
-        """Calcule qℓ = max(degree+1, round((1-s)*hℓ)). Section 5, Step 3."""
+        """
+        Compute q_l.
+
+        Parameters
+        ----------
+        h_values : list
+            Values of h_l.
+
+        Returns
+        -------
+        list
+            Values of q_l.
+        """
         min_q = self.degree + 1
         return [max(min_q, round((1 - self.s) * h)) for h in h_values]
 
@@ -85,7 +119,23 @@ class FunCast(BaseEstimator):
         t_past: np.ndarray,
         h_values: list[int],
     ) -> tuple[list[np.ndarray], list[np.ndarray]]:
-        """Projette chaque covariate Xi,ℓ sur sa base θℓ (Assumption 2)."""
+        """
+        Project each covariate on theta basis.
+
+        Parameters
+        ----------
+        covariates_past : list of array-like
+            Past of covariates.
+        t_past : array-like
+            Past timestamps.
+        h_values : list
+            Values of h_l.
+
+        Returns
+        -------
+        tuple
+            Expansion coefficients of the covariates.
+        """
         C_list, theta_list = [], []
         for X, h in zip(covariates_past, h_values):
             theta = get_basis(t_past, h, self.basis_type)
@@ -102,26 +152,28 @@ class FunCast(BaseEstimator):
         q_values: list[int],
     ) -> list[np.ndarray]:
         """
-        Calcule les matrices d'inner product Jθ,B,ℓ (Proof of Theorem 1) :
+        Compute the inner product matrix.
 
-            Jθ,B,ℓ = ∫₀ᵀ θℓ(u)ᵀ Bℓ(u) du ∈ R^{hℓ × qℓ}
+        Parameters
+        ----------
+        theta_list : list of array-like
+            Basis for covariates.
+        t_past : array-like
+            Past timestamps.
+        q_values : list
+            Values of q_l.
 
-        Approximée par la règle des trapèzes.
-        Utilise np.trapezoid (numpy ≥ 2.0) ou np.trapz (numpy < 2.0).
+        Returns
+        -------
+        J_list : list
+            Inner product matrix.
         """
-        try:
-            # numpy >= 2.0
-            trapezoid = np.trapezoid  # type: ignore[attr-defined]
-        except AttributeError:
-            # numpy < 2.0
-            trapezoid = np.trapz  # type: ignore[attr-defined]
-
         J_list = []
         for theta, q_ell in zip(theta_list, q_values):
             B_ell = get_basis(t_past, q_ell, self.basis_type)
             integrand = theta[:, :, np.newaxis] * B_ell[:, np.newaxis, :]
-            J = trapezoid(integrand, x=t_past, axis=0)
-            J_list.append(J)
+            J = _trapezoid(integrand, x=t_past, axis=0)
+            J_list.append(np.asarray(J))
         return J_list
 
     def _build_design_matrix(
@@ -131,16 +183,32 @@ class FunCast(BaseEstimator):
         t_future: np.ndarray,
         q_values: list[int],
     ) -> np.ndarray:
-        """Construit la matrice de design X ∈ R^{n*m2 × K*q} (Theorem 1, Eq. 8)."""
+        """
+        Build the design matrix.
+
+        Parameters
+        ----------
+        C_list : list of array-like
+            Expansion coefficients of the covariates.
+        J_list : list
+            Inner product matrix.
+        t_future : array-like
+            Future timestamps.
+        q_values : list
+            Values of q_l.
+
+        Returns
+        -------
+        X_design : array-like
+            Design matrix.
+        """
         n = C_list[0].shape[0]
         m2 = len(t_future)
         K = self.K
         q_total = sum(q_values)
-
         psi = get_basis(t_future, K, self.basis_type)
         C_full = np.concatenate(C_list, axis=1)
         X_design = np.zeros((n * m2, K * q_total))
-
         for j, t_j in enumerate(t_future):
             psi_t = psi[j, :]
             xi_parts = []
@@ -152,13 +220,8 @@ class FunCast(BaseEstimator):
                 cJ = c_i_ell @ J
                 block = np.einsum("k,nq->nkq", psi_t, cJ).reshape(n, K * q_ell)
                 xi_parts.append(block)
-
             xi_j = np.concatenate(xi_parts, axis=1)
-
-            # La ligne i*m2 + j correspond à l'observation i au temps j,
-            # cohérent avec y = Y_future.ravel() (ordre C row-major).
             X_design[j::m2, :] = xi_j
-
         return X_design
 
     def fit(
@@ -170,18 +233,23 @@ class FunCast(BaseEstimator):
         covariates_past: list[np.ndarray] | None = None,
     ) -> "FunCast":
         """
-        Entraîne FunCast (Section 5 + Theorem 2).
+        Fit FunCast.
 
-        Paramètres
+        Parameters
         ----------
-        Y_past          : array (n, m1)   — passé de Y sur [0, T]
-        Y_future        : array (n, m2)   — futur de Y sur [T, T+H]
-        t_past          : array (m1,)     — grille temporelle [0, T]
-        t_future        : array (m2,)     — grille temporelle [T, T+H]
-        covariates_past : list de (n, m1) — covariates optionnels
+        Y_past : array-like
+            Past of Y.
+        Y_future : array-like
+            Future of Y.
+        t_past : array-like
+            Past timestamps.
+        t_future : array-like
+            Future timestamps.
+        covariates_past : list of array-like
+            Past of covariates.
 
-        Retourne
-        --------
+        Returns
+        -------
         self
         """
         all_covariates = [Y_past] + (covariates_past or [])
@@ -214,16 +282,19 @@ class FunCast(BaseEstimator):
         covariates_past_new: list[np.ndarray] | None = None,
     ) -> np.ndarray:
         """
-        Prédit le futur de Y (Proposition 1).
+        Predict the future of Y.
 
-        Paramètres
+        Parameters
         ----------
-        Y_past_new          : array (n_new, m1)
-        covariates_past_new : list de (n_new, m1)
+        Y_past_new : array-like
+            Past of Y for inference.
+        covariates_past_new : list of array-like
+            Past of covariates for inference.
 
-        Retourne
-        --------
-        Y_pred : array (n_new, m2)
+        Returns
+        -------
+        Y_pred : array-like
+            Prediction of Y.
         """
         all_new = [Y_past_new] + (covariates_past_new or [])
 
@@ -249,15 +320,23 @@ class FunCast(BaseEstimator):
         metric: str = "rmse",
     ) -> float:
         """
-        Calcule RMSE ou SMAPE (Section 6.3).
+        Compute RMSE and SMAPE.
 
-        Paramètres
+        Parameters
         ----------
-        metric : 'rmse' ou 'smape'
+        Y_past : array-like
+            Past of Y.
+        Y_future : array-like
+            Future of Y.
+        covariates_past : list of array-like or None, optionnal
+            Past of covariates. Default is None.
+        metric : string, optionnal
+            Evaluation metric, "rmse" or "smape". Default is "rmse".
 
-        Retourne
-        --------
-        score : float
+        Returns
+        -------
+        float
+            Metric value.
         """
         Y_pred = self.predict(Y_past, covariates_past)
 

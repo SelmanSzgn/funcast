@@ -1,8 +1,5 @@
 """
-Bases fonctionnelles pour FunCast.
-
-Fournit les bases B-spline et de Fourier utilisées pour la projection
-des covariates et du futur de Y.
+Functional basis for FunCast.
 """
 
 import numpy as np
@@ -11,17 +8,21 @@ from scipy.interpolate import BSpline
 
 def bspline_basis(t: np.ndarray, n_basis: int, degree: int = 3) -> np.ndarray:
     """
-    Génère une matrice de base B-spline cubique.
+    Create a cubic B-spline basis matrix.
 
-    Paramètres
+    Parameters
     ----------
-    t        : array (m,)  — points d'évaluation
-    n_basis  : int         — nombre de fonctions de base
-    degree   : int         — degré des splines (3 = cubique)
+    t : array-like
+        Evaluation points.
+    n_basis : int
+        Number of basis functions.
+    degree : int
+        Spline degrees. Default is 3.
 
-    Retourne
-    --------
-    B : array (m, n_basis)
+    Returns
+    -------
+    B : array-like
+        Basis matrix.
     """
     n_basis = max(n_basis, degree + 1)
 
@@ -48,16 +49,19 @@ def bspline_basis(t: np.ndarray, n_basis: int, degree: int = 3) -> np.ndarray:
 
 def fourier_basis(t: np.ndarray, n_basis: int) -> np.ndarray:
     """
-    Génère une base de Fourier (1, cos, sin, cos2, sin2, ...).
+    Create a Fourier basis.
 
-    Paramètres
+    Parameters
     ----------
-    t       : array (m,)  — points d'évaluation
-    n_basis : int         — nombre de fonctions de base (impair recommandé)
+    t : array-like
+        Evaluation points.
+    n_basis : int
+        Number of basis functions.
 
-    Retourne
-    --------
-    B : array (m, n_basis)
+    Returns
+    -------
+    B : array-like
+        Basis matrix.
     """
     T = t.max() - t.min()
     B = np.ones((len(t), n_basis))
@@ -72,17 +76,21 @@ def fourier_basis(t: np.ndarray, n_basis: int) -> np.ndarray:
 
 def get_basis(t: np.ndarray, n_basis: int, basis_type: str = "bspline") -> np.ndarray:
     """
-    Sélecteur de base fonctionnelle.
+    Create a basis of functions.
 
-    Paramètres
+    Parameters
     ----------
-    t          : array (m,) — points d'évaluation
-    n_basis    : int        — nombre de fonctions de base
-    basis_type : str        — 'bspline' ou 'fourier'
+    t : array-like
+        Evaluation points.
+    n_basis : int
+        Number of basis functions.
+    basis_type : str
+        Type of function basis, "bspline" or "fourier". Default is "bspline".
 
-    Retourne
-    --------
-    B : array (m, n_basis)
+    Returns
+    -------
+    B : array-like
+        Basis matrix.
     """
     if basis_type == "bspline":
         return bspline_basis(t, n_basis)
@@ -90,5 +98,5 @@ def get_basis(t: np.ndarray, n_basis: int, basis_type: str = "bspline") -> np.nd
         return fourier_basis(t, n_basis)
     else:
         raise ValueError(
-            f"basis_type inconnu : '{basis_type}'. Choisir 'bspline' ou 'fourier'."
+            f"unknown basis_type : '{basis_type}'. Choose 'bspline' or 'fourier'."
         )

@@ -1,7 +1,5 @@
 """
-Sélection automatique de hℓ via le critère RRSS.
-
-Référence : Sezgin et al. (2025), Section 5, Step 2, Eq. 10.
+Automatic selection of h_l with RRSS criterion.
 """
 
 import warnings
@@ -20,21 +18,25 @@ def select_h_rrss(
     degree: int = 3,
 ) -> int:
     """
-    Sélectionne hℓ via le critère RRSS (Eq. 10) :
+    Selects h_l with RRSS criterion.
 
-        RRSS(hℓ) = sqrt( sum_i sum_j (X_ij - X̂_ij)² / (n * (m1 - hℓ)) )
-
-    Paramètres
+    Parameters
     ----------
-    X            : array (n, m1) — réalisations du covariate
-    t            : array (m1,)   — grille temporelle
-    h_candidates : liste de valeurs candidates pour hℓ
-    basis_type   : str
-    degree       : int — degré des B-splines (pour la contrainte min)
+    X : array-like
+        Covariate realization.
+    t : array-like
+        Temporal grid.
+    h_candidates : list or None, optionnal
+        Candidates for h_l values. Default is None.
+    basis_type : str
+        Type of function basis. Default is "bspline"
+    degree : int
+        Spline degrees. Default is 3.
 
-    Retourne
-    --------
-    h_opt : int — valeur de hℓ minimisant le critère RRSS
+    Returns
+    -------
+    h_opt : int
+        h_l value that minimizes RRSS.
     """
     n, m1 = X.shape
     min_h = degree + 1
@@ -46,10 +48,7 @@ def select_h_rrss(
         h_candidates = [h for h in h_candidates if h >= min_h]
 
     if not h_candidates:
-        warnings.warn(
-            f"Aucun candidat valide pour hℓ (min requis : {min_h}). "
-            f"Utilisation de h={min_h}."
-        )
+        warnings.warn(f"No valid candidate for h_l. Set h={min_h}.")
         return min_h
 
     best_h, best_rrss = h_candidates[0], np.inf
