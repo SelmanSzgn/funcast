@@ -19,3 +19,5 @@ htmlcov/
 Thumbs.db
 examples/*.png
 .ipynb_checkpoints/
+docs/build/
+docs/source/api/_autosummary/

@@ -12,7 +12,7 @@ def bspline_basis(t: np.ndarray, n_basis: int, degree: int = 3) -> np.ndarray:
 
     Parameters
     ----------
-    t : array-like
+    t : np.ndarray
         Evaluation points.
     n_basis : int
         Number of basis functions.
@@ -21,7 +21,7 @@ def bspline_basis(t: np.ndarray, n_basis: int, degree: int = 3) -> np.ndarray:
 
     Returns
     -------
-    B : array-like
+    B : np.ndarray
         Basis matrix.
     """
     n_basis = max(n_basis, degree + 1)
@@ -53,14 +53,14 @@ def fourier_basis(t: np.ndarray, n_basis: int) -> np.ndarray:
 
     Parameters
     ----------
-    t : array-like
+    t : np.ndarray
         Evaluation points.
     n_basis : int
         Number of basis functions.
 
     Returns
     -------
-    B : array-like
+    B : np.ndarray
         Basis matrix.
     """
     T = t.max() - t.min()
@@ -80,7 +80,7 @@ def get_basis(t: np.ndarray, n_basis: int, basis_type: str = "bspline") -> np.nd
 
     Parameters
     ----------
-    t : array-like
+    t : np.ndarray
         Evaluation points.
     n_basis : int
         Number of basis functions.
@@ -89,7 +89,7 @@ def get_basis(t: np.ndarray, n_basis: int, basis_type: str = "bspline") -> np.nd
 
     Returns
     -------
-    B : array-like
+    B : np.ndarray
         Basis matrix.
     """
     if basis_type == "bspline":
