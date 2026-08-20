@@ -7,10 +7,10 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../../src"))
 
-project   = "FunCast"
+project = "FunCast"
 copyright = "2025, Sezgin"
-author    = "Sezgin"
-release   = "0.1.0"
+author = "Sezgin"
+release = "0.1.0"
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -19,7 +19,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx_autodoc_typehints",
-     "sphinx.ext.mathjax",
+    "sphinx.ext.mathjax",
     "myst_parser",
 ]
 
@@ -44,8 +44,8 @@ typehints_document_rtype = True
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "numpy":  ("https://numpy.org/doc/stable", None),
-    "scipy":  ("https://docs.scipy.org/doc/scipy", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy", None),
     "sklearn": ("https://scikit-learn.org/stable", None),
 }
 
@@ -58,16 +58,16 @@ myst_enable_extensions = [
 html_theme = "sphinx_rtd_theme"
 
 html_theme_options = {
-    "navigation_depth":    4,
+    "navigation_depth": 4,
     "collapse_navigation": False,
-    "sticky_navigation":   True,
-    "includehidden":       True,
-    "titles_only":         False,
+    "sticky_navigation": True,
+    "includehidden": True,
+    "titles_only": False,
 }
 
 html_static_path = ["_static"]
 
 source_suffix = {
     ".rst": "restructuredtext",
-    ".md":  "markdown",
+    ".md": "markdown",
 }

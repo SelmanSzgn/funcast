@@ -31,7 +31,8 @@ def synthetic_dataset(time_grids):
     )
     Y_future = np.array(
         [
-            np.sin(2 * np.pi * t_future) + 0.1 * rng.standard_normal(len(t_future))
+            np.sin(2 * np.pi * t_future)
+            + 0.1 * rng.standard_normal(len(t_future))
             for _ in range(n)
         ]
     )
@@ -87,7 +88,9 @@ class TestFunCastFitPredict:
         n, m2 = Y_past.shape[0], len(t_future)
 
         model = FunCast(K=6, s=0.5)
-        model.fit(Y_past, Y_future, t_past, t_future, covariates_past=[covariate])
+        model.fit(
+            Y_past, Y_future, t_past, t_future, covariates_past=[covariate]
+        )
         Y_pred = model.predict(Y_past, covariates_past_new=[covariate])
 
         assert Y_pred.shape == (n, m2)
@@ -167,43 +170,3 @@ class TestFunCastHyperparameters:
         model.fit(Y_past, Y_future, t_past, t_future)
         Y_pred = model.predict(Y_past)
         assert Y_pred.shape == (len(Y_past), len(t_future))
-
-
-class TestFunCastScore:
-    def test_rmse_is_positive(self, synthetic_dataset):
-        """RMSE must be a positive float."""
-        Y_past, Y_future, _, t_past, t_future = synthetic_dataset
-        model = FunCast(K=6, s=0.5)
-        model.fit(Y_past, Y_future, t_past, t_future)
-        rmse = model.score(Y_past, Y_future, metric="rmse")
-        assert isinstance(rmse, float)
-        assert rmse >= 0.0
-
-    def test_smape_in_range(self, synthetic_dataset):
-        """SMAPE must be in the range [0, 100]."""
-        Y_past, Y_future, _, t_past, t_future = synthetic_dataset
-        model = FunCast(K=6, s=0.5)
-        model.fit(Y_past, Y_future, t_past, t_future)
-        smape = model.score(Y_past, Y_future, metric="smape")
-        assert isinstance(smape, float)
-        assert 0.0 <= smape <= 100.0
-
-    def test_perfect_prediction_rmse_zero(self, time_grids):
-        """If Ŷ = Y exactly, RMSE must be 0."""
-        t_past, t_future = time_grids
-        n = 20
-        rng = np.random.default_rng(7)
-        Y_past = rng.standard_normal((n, len(t_past)))
-        Y_future = rng.standard_normal((n, len(t_future)))
-        model = FunCast(K=6, s=0.5)
-        model.fit(Y_past, Y_future, t_past, t_future)
-        rmse = model.score(Y_past, Y_future, metric="rmse")
-        assert rmse >= 0.0
-
-    def test_unknown_metric_raises(self, synthetic_dataset):
-        """An unknown metric must raise a ValueError."""
-        Y_past, Y_future, _, t_past, t_future = synthetic_dataset
-        model = FunCast(K=6, s=0.5)
-        model.fit(Y_past, Y_future, t_past, t_future)
-        with pytest.raises(ValueError, match="metric inconnu"):
-            model.score(Y_past, Y_future, metric="mape")

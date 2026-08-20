@@ -1,5 +1,13 @@
 """
 Automatic selection of h_l with RRSS criterion.
+
+This module provides the automatic selection procedure of covariate basis sizes
+as described in our paper.
+
+References
+----------
+Sezgin, S. and al. (2025). "FunCast: a forecasting model for functional data
+using covariates". https://hal.science/hal-05038816v1
 """
 
 import warnings

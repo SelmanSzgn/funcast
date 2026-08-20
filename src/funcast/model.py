@@ -1,5 +1,13 @@
 """
 FunCast model implementation.
+
+This module provides the FunCast class which implements the training and the
+inference of the model.
+
+References
+----------
+Sezgin, S. and al. (2025). "FunCast: a forecasting model for functional data
+using covariates". https://hal.science/hal-05038816v1
 """
 
 import numpy as np
@@ -298,8 +306,12 @@ class FunCast(BaseEstimator):
         C_new_list = []
         for X_new, theta, h in zip(all_new, self.theta_list_, self.h_values_):
             thetaT_theta = theta.T @ theta
-            C_new, _, _, _ = lstsq(thetaT_theta, (X_new @ theta).T, cond=self.rcond)
-            C_new_list.append(np.asarray(C_new).T)  # ← np.asarray() clarifie le type
+            C_new, _, _, _ = lstsq(
+                thetaT_theta, (X_new @ theta).T, cond=self.rcond
+            )
+            C_new_list.append(
+                np.asarray(C_new).T
+            )  # ← np.asarray() clarifie le type
 
         X_new_design = self._build_design_matrix(
             C_new_list, self.J_list_, self.t_future_, self.q_values_
@@ -308,40 +320,3 @@ class FunCast(BaseEstimator):
         n_new = Y_past_new.shape[0]
         y_pred = X_new_design @ self.b_hat_
         return np.asarray(y_pred).reshape(n_new, self.m2_)
-
-    def score(
-        self,
-        Y_past: np.ndarray,
-        Y_future: np.ndarray,
-        covariates_past: list[np.ndarray] | None = None,
-        metric: str = "rmse",
-    ) -> float:
-        """
-        Compute RMSE and SMAPE.
-
-        Parameters
-        ----------
-        Y_past : array-like
-            Past of Y.
-        Y_future : array-like
-            Future of Y.
-        covariates_past : list of array-like or None, optionnal
-            Past of covariates. Default is None.
-        metric : string, optionnal
-            Evaluation metric, "rmse" or "smape". Default is "rmse".
-
-        Returns
-        -------
-        float
-            Metric value.
-        """
-        Y_pred = self.predict(Y_past, covariates_past)
-
-        if metric == "rmse":
-            return float(np.sqrt(np.mean((Y_future - Y_pred) ** 2)))
-        elif metric == "smape":
-            denom = np.abs(Y_future) + np.abs(Y_pred)
-            denom = np.where(denom == 0, 1e-8, denom)
-            return float(100 * np.mean(np.abs(Y_future - Y_pred) / denom))
-        else:
-            raise ValueError(f"metric inconnu : '{metric}'. Choisir 'rmse' ou 'smape'.")

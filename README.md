@@ -10,23 +10,9 @@ Authors : Selman Sezgin (a, b), Julien Jacques (a), Kahina Mokrani (b) and Sylva
 
 (b) Orange Research, Belfort, France
 
+Preprint on HAL: https://hal.science/hal-05038816v1
+
 ## Installation
 ``
 pip install funcast
 ``
-
-## Quick start
-```
-import numpy as np
-from funcast import FunCast
-
-n, m1, m2 = 50, 100, 20
-t_past   = np.linspace(0, 1, m1)
-t_future = np.linspace(1, 1.2, m2)
-Y_past   = np.random.randn(n, m1)
-Y_future = np.random.randn(n, m2)
-
-model = FunCast(K=8, s=0.5)
-model.fit(Y_past, Y_future, t_past, t_future)
-Y_pred = model.predict(Y_past)
-```

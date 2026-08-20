@@ -15,7 +15,10 @@ def synthetic_data():
     n, m1 = 30, 60
     t = np.linspace(0, 1, m1)
     X = np.array(
-        [np.sin(2 * np.pi * t) + 0.1 * rng.standard_normal(m1) for _ in range(n)]
+        [
+            np.sin(2 * np.pi * t) + 0.1 * rng.standard_normal(m1)
+            for _ in range(n)
+        ]
     )
     return X, t
 
@@ -68,7 +71,9 @@ class TestSelectHRrss:
         rng = np.random.default_rng(1)
         n, m1 = 40, 80
         t = np.linspace(0, 1, m1)
-        X = np.array([1.0 + 0.1 * t + 0.01 * rng.standard_normal(m1) for _ in range(n)])
+        X = np.array(
+            [1.0 + 0.1 * t + 0.01 * rng.standard_normal(m1) for _ in range(n)]
+        )
         h = select_h_rrss(X, t, h_candidates=list(range(4, 20)))
         assert h <= 12
 

@@ -1,5 +1,12 @@
 """
 Functional basis for FunCast.
+
+This module implements the functional basis used by FunCast model.
+
+References
+----------
+Sezgin, S. and al. (2025). "FunCast: a forecasting model for functional data
+using covariates". https://hal.science/hal-05038816v1
 """
 
 import numpy as np
@@ -35,7 +42,11 @@ def bspline_basis(t: np.ndarray, n_basis: int, degree: int = 3) -> np.ndarray:
         inner_knots = np.array([])
 
     knots = np.concatenate(
-        [np.repeat(t_min, degree + 1), inner_knots, np.repeat(t_max, degree + 1)]
+        [
+            np.repeat(t_min, degree + 1),
+            inner_knots,
+            np.repeat(t_max, degree + 1),
+        ]
     )
 
     B = np.zeros((len(t), n_basis))
@@ -74,7 +85,9 @@ def fourier_basis(t: np.ndarray, n_basis: int) -> np.ndarray:
     return B
 
 
-def get_basis(t: np.ndarray, n_basis: int, basis_type: str = "bspline") -> np.ndarray:
+def get_basis(
+    t: np.ndarray, n_basis: int, basis_type: str = "bspline"
+) -> np.ndarray:
     """
     Create a basis of functions.
 
