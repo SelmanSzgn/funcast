@@ -9,7 +9,7 @@ from funcast.basis import bspline_basis, fourier_basis, get_basis
 from funcast.model import FunCast
 from funcast.selection import select_h_rrss
 
-__version__ = "0.1.0"
+__version__ = "1.0.1"
 __all__ = [
     "FunCast",
     "get_basis",

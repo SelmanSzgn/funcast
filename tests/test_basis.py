@@ -136,3 +136,11 @@ class TestGetBasis:
         B1 = get_basis(grid, n_basis=8)
         B2 = bspline_basis(grid, n_basis=8)
         np.testing.assert_array_equal(B1, B2)
+
+    def test_degree_is_propagated(self, grid):
+        """get_basis must pass degree to the B-spline basis."""
+        B2 = get_basis(grid, n_basis=8, basis_type="bspline", degree=2)
+        B3 = get_basis(grid, n_basis=8, basis_type="bspline", degree=3)
+        assert B2.shape == B3.shape == (100, 8)
+        assert not np.allclose(B2, B3)
+        np.testing.assert_array_equal(B2, bspline_basis(grid, 8, degree=2))

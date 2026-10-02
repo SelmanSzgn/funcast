@@ -40,7 +40,8 @@ class FunCast(BaseEstimator):
     h_list : list, optionnal
         Values of h_l if auto_h is False. Default is None.
     degree : int, optionnal
-        B-splines degree. Default is 3.
+        B-splines degree, used for all B-spline bases (covariates and
+        future Y). Ignored with the Fourier basis. Default is 3.
     rcond : float or None, optionnal
         Pseudo-inverse threshold. Default is None.
     """
@@ -143,7 +144,7 @@ class FunCast(BaseEstimator):
         """
         C_list, theta_list = [], []
         for X, h in zip(covariates_past, h_values):
-            theta = get_basis(t_past, h, self.basis_type)
+            theta = get_basis(t_past, h, self.basis_type, self.degree)
             thetaT_theta = theta.T @ theta
             C, _, _, _ = lstsq(thetaT_theta, (X @ theta).T, cond=self.rcond)
             C_list.append(C.T)
@@ -175,7 +176,7 @@ class FunCast(BaseEstimator):
         """
         J_list = []
         for theta, q_ell in zip(theta_list, q_values):
-            B_ell = get_basis(t_past, q_ell, self.basis_type)
+            B_ell = get_basis(t_past, q_ell, self.basis_type, self.degree)
             integrand = theta[:, :, np.newaxis] * B_ell[:, np.newaxis, :]
             J = _trapezoid(integrand, x=t_past, axis=0)
             J_list.append(np.asarray(J))
@@ -211,7 +212,7 @@ class FunCast(BaseEstimator):
         m2 = len(t_future)
         K = self.K
         q_total = sum(q_values)
-        psi = get_basis(t_future, K, self.basis_type)
+        psi = get_basis(t_future, K, self.basis_type, self.degree)
         C_full = np.concatenate(C_list, axis=1)
         X_design = np.zeros((n * m2, K * q_total))
         for j, t_j in enumerate(t_future):

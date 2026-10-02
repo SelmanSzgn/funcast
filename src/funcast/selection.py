@@ -66,7 +66,7 @@ def select_h_rrss(
         if denom <= 0:
             continue
         try:
-            theta = get_basis(t, h, basis_type)
+            theta = get_basis(t, h, basis_type, degree)
             thetaT_theta = theta.T @ theta
             C, _, _, _ = lstsq(thetaT_theta, (X @ theta).T)
             X_hat = (theta @ C).T

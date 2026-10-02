@@ -86,7 +86,10 @@ def fourier_basis(t: np.ndarray, n_basis: int) -> np.ndarray:
 
 
 def get_basis(
-    t: np.ndarray, n_basis: int, basis_type: str = "bspline"
+    t: np.ndarray,
+    n_basis: int,
+    basis_type: str = "bspline",
+    degree: int = 3,
 ) -> np.ndarray:
     """
     Create a basis of functions.
@@ -99,6 +102,8 @@ def get_basis(
         Number of basis functions.
     basis_type : str
         Type of function basis, "bspline" or "fourier". Default is "bspline".
+    degree : int
+        B-spline degree (ignored for the Fourier basis). Default is 3.
 
     Returns
     -------
@@ -106,7 +111,7 @@ def get_basis(
         Basis matrix.
     """
     if basis_type == "bspline":
-        return bspline_basis(t, n_basis)
+        return bspline_basis(t, n_basis, degree)
     elif basis_type == "fourier":
         return fourier_basis(t, n_basis)
     else:

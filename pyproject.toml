@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "funcast"
-version = "1.0.0"
+dynamic = ["version"]
 description = "Functional data forecasting with covariates (FunCast model)"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -49,9 +49,12 @@ Documentation  = "https://funcast.readthedocs.io"
 [tool.hatch.build.targets.wheel]
 packages = ["src/funcast"]
 
+[tool.hatch.version]
+path = "src/funcast/__init__.py"
+
 [tool.ruff]
 src            = ["src"]
-line-length    = 80
+line-length    = 79
 target-version = "py312"
 
 [tool.ruff.lint]

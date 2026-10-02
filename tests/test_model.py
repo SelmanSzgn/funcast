@@ -170,3 +170,12 @@ class TestFunCastHyperparameters:
         model.fit(Y_past, Y_future, t_past, t_future)
         Y_pred = model.predict(Y_past)
         assert Y_pred.shape == (len(Y_past), len(t_future))
+
+    def test_degree_changes_fit(self, synthetic_dataset):
+        """degree doit influencer le modèle ajusté."""
+        Y_past, Y_future, _, t_past, t_future = synthetic_dataset
+        m2 = FunCast(K=6, degree=2, auto_h=False, h_list=[8])
+        m3 = FunCast(K=6, degree=3, auto_h=False, h_list=[8])
+        m2.fit(Y_past, Y_future, t_past, t_future)
+        m3.fit(Y_past, Y_future, t_past, t_future)
+        assert not np.allclose(m2.theta_list_[0], m3.theta_list_[0])
