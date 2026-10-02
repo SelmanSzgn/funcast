@@ -4,6 +4,7 @@ Tests for module funcast.model
 
 import numpy as np
 import pytest
+from sklearn.base import clone
 
 from funcast import FunCast
 
@@ -172,10 +173,59 @@ class TestFunCastHyperparameters:
         assert Y_pred.shape == (len(Y_past), len(t_future))
 
     def test_degree_changes_fit(self, synthetic_dataset):
-        """degree doit influencer le modèle ajusté."""
+        """degree must influence the fitted model."""
         Y_past, Y_future, _, t_past, t_future = synthetic_dataset
         m2 = FunCast(K=6, degree=2, auto_h=False, h_list=[8])
         m3 = FunCast(K=6, degree=3, auto_h=False, h_list=[8])
         m2.fit(Y_past, Y_future, t_past, t_future)
         m3.fit(Y_past, Y_future, t_past, t_future)
         assert not np.allclose(m2.theta_list_[0], m3.theta_list_[0])
+
+class TestFunCastCorrectness:
+    @pytest.mark.parametrize("use_cov", [False, True])
+    def test_recovers_model_generated_data(self, synthetic_dataset, use_cov):
+        """Si Y_future est généré par le modèle, un refit le reproduit."""
+        Y_past, Y_future, cov, t_past, t_future = synthetic_dataset
+        covs = [cov] if use_cov else None
+        params = dict(
+            K=6, s=0.5, auto_h=False, h_list=[8, 8] if use_cov else [8]
+        )
+        gen = FunCast(**params).fit(
+            Y_past, Y_future, t_past, t_future, covariates_past=covs
+        )
+        Y_gen = gen.predict(Y_past, covariates_past_new=covs)
+
+        refit = FunCast(**params).fit(
+            Y_past, Y_gen, t_past, t_future, covariates_past=covs
+        )
+        Y_back = refit.predict(Y_past, covariates_past_new=covs)
+        np.testing.assert_allclose(Y_back, Y_gen, atol=1e-6)
+
+    def test_scale_equivariance(self, synthetic_dataset):
+        """Multiplier Y par 3 doit multiplier la prédiction par 3."""
+        Y_past, Y_future, _, t_past, t_future = synthetic_dataset
+        params = dict(K=6, s=0.5, auto_h=False, h_list=[8])
+        base = FunCast(**params).fit(Y_past, Y_future, t_past, t_future)
+        scaled = FunCast(**params).fit(
+            3 * Y_past, 3 * Y_future, t_past, t_future
+        )
+        np.testing.assert_allclose(
+            scaled.predict(3 * Y_past),
+            3 * base.predict(Y_past),
+            rtol=1e-5,
+            atol=1e-6,
+        )
+
+    def test_inputs_not_modified(self, synthetic_dataset):
+        """fit et predict ne doivent pas modifier les données d'entrée."""
+        Y_past, Y_future, _, t_past, t_future = synthetic_dataset
+        arrays = (Y_past, Y_future, t_past, t_future)
+        copies = [a.copy() for a in arrays]
+        FunCast(K=6).fit(Y_past, Y_future, t_past, t_future).predict(Y_past)
+        for a, b in zip(arrays, copies):
+            np.testing.assert_array_equal(a, b)
+
+    def test_sklearn_clone(self):
+        """Compatibilité scikit-learn : clone conserve les paramètres."""
+        m = FunCast(K=5, s=0.3, degree=2)
+        assert clone(m).get_params() == m.get_params()
