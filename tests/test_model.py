@@ -181,6 +181,7 @@ class TestFunCastHyperparameters:
         m3.fit(Y_past, Y_future, t_past, t_future)
         assert not np.allclose(m2.theta_list_[0], m3.theta_list_[0])
 
+
 class TestFunCastCorrectness:
     @pytest.mark.parametrize("use_cov", [False, True])
     def test_recovers_model_generated_data(self, synthetic_dataset, use_cov):
