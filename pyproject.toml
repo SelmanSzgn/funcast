@@ -114,3 +114,5 @@ docs = [
     "myst-parser>=2.0",
     "sphinx-autodoc-typehints>=1.25",
 ]
+
+demo = ["matplotlib", "scipy", "scikit-learn"]
