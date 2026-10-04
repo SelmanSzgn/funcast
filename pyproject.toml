@@ -115,4 +115,4 @@ docs = [
     "sphinx-autodoc-typehints>=1.25",
 ]
 
-demo = ["matplotlib", "scipy", "scikit-learn"]
+demo = ["matplotlib>=3.7", "scipy", "scikit-learn"]
